@@ -94,29 +94,39 @@ class _PreScanContent extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: BlocBuilder<PreScanCubit, PreScanState>(
                 builder: (context, state) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut,
-                        child: state.showTip
-                            ? _TipBanner(
-                                onDismiss: () =>
-                                    context.read<PreScanCubit>().dismissTip(),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      if (state.showTip) const SizedBox(height: 16),
-                      _CropGrid(
-                        selectedCrop: state.selectedCrop,
-                        onSelect: (crop) =>
-                            context.read<PreScanCubit>().selectCrop(crop),
-                      ),
-                      const SizedBox(height: 20),
-                      const _PhotoTipsCard(),
-                      const SizedBox(height: 24),
-                    ],
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Mirror _CropGrid's sizing to derive 1/3 of a grid-item height
+                      const crossAxisSpacing = 12.0;
+                      const childAspectRatio = 0.95;
+                      final itemWidth =
+                          (constraints.maxWidth - crossAxisSpacing) / 2;
+                      final itemHeight = itemWidth / childAspectRatio;
+                      final autoHeight = itemHeight / 3;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _AutoCard(
+                            height: autoHeight,
+                            isSelected: state.isAuto,
+                            onTap: () =>
+                                context.read<PreScanCubit>().selectAuto(),
+                          ),
+                          const SizedBox(height: 12),
+                          _CropGrid(
+                            selectedCrop: state.isAuto
+                                ? null
+                                : state.selectedCrop,
+                            onSelect: (crop) =>
+                                context.read<PreScanCubit>().selectCrop(crop),
+                          ),
+                          const SizedBox(height: 20),
+                          const _PhotoTipsCard(),
+                          const SizedBox(height: 24),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -153,45 +163,117 @@ class _PreScanContent extends StatelessWidget {
   }
 }
 
-// ── Tip Banner ───────────────────────────────────────────────────────────────
+// ── Auto Card ────────────────────────────────────────────────────────────────
 
-class _TipBanner extends StatelessWidget {
-  final VoidCallback onDismiss;
+class _AutoCard extends StatelessWidget {
+  final double height;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  const _TipBanner({required this.onDismiss});
+  const _AutoCard({
+    required this.height,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        children: [
-          const Text('💡', style: TextStyle(fontSize: 16)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Tip: Make sure the leaf is well-lit.',
-              style: GoogleFonts.nunito(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.06),
+              blurRadius: isSelected ? 12 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Row(
+            children: [
+              // ── Tinted icon strip ───────────────────────────────
+              AspectRatio(
+                aspectRatio: 1,
+                child: Container(
+                  color: AppColors.primaryAccent.withValues(alpha: 0.1),
+                  child: Center(
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      size: height * 0.45,
+                      color: AppColors.primaryAccent,
+                    ),
+                  ),
+                ),
               ),
-            ),
+
+              // ── Labels ──────────────────────────────────────────
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Auto',
+                        style: GoogleFonts.nunito(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      Text(
+                        'AI detects your crop automatically',
+                        style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Selection indicator ──────────────────────────────
+              Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          key: ValueKey(true),
+                          color: AppColors.primary,
+                          size: 20,
+                        )
+                      : Icon(
+                          Icons.circle_outlined,
+                          key: const ValueKey(false),
+                          color: AppColors.textMuted.withValues(alpha: 0.4),
+                          size: 20,
+                        ),
+                ),
+              ),
+            ],
           ),
-          GestureDetector(
-            onTap: onDismiss,
-            child: Icon(
-              Icons.close_rounded,
-              size: 18,
-              color: AppColors.primary.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -233,6 +315,7 @@ class _CropGrid extends StatelessWidget {
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 0.95,
@@ -515,54 +598,54 @@ class _OpenCameraButton extends StatelessWidget {
       width: double.infinity,
       height: 64,
       child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: enabled ? 1.0 : 0.45,
-          child: ElevatedButton(
-            onPressed: enabled
-                ? () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ScannerViewProvider(),
-                      ),
-                    )
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              disabledBackgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textLight,
-              shape: const StadiumBorder(),
-              elevation: enabled ? 4 : 0,
-              shadowColor: AppColors.primary.withValues(alpha: 0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withValues(alpha: 0.4),
-                    shape: BoxShape.circle,
+        duration: const Duration(milliseconds: 200),
+        opacity: enabled ? 1.0 : 0.45,
+        child: ElevatedButton(
+          onPressed: enabled
+              ? () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ScannerViewProvider(),
                   ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    size: 20,
-                    color: AppColors.textLight,
-                  ),
+                )
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            disabledBackgroundColor: AppColors.primary,
+            foregroundColor: AppColors.textLight,
+            shape: const StadiumBorder(),
+            elevation: enabled ? 4 : 0,
+            shadowColor: AppColors.primary.withValues(alpha: 0.4),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withValues(alpha: 0.4),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'OPEN CAMERA',
-                  style: GoogleFonts.nunito(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
-                    color: AppColors.textLight,
-                  ),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  size: 20,
+                  color: AppColors.textLight,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'OPEN CAMERA',
+                style: GoogleFonts.nunito(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                  color: AppColors.textLight,
+                ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
   }
 }

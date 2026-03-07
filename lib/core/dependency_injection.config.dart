@@ -28,8 +28,11 @@ import 'package:kubo_dex/features/home/presentation/home_screen/cubits/home_cubi
     as _i314;
 import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/cubits/pre_scan_cubit.dart'
     as _i203;
-import 'package:kubo_dex/features/scanner/data/scanner_api_service.dart'
-    as _i732;
+import 'package:kubo_dex/features/scanner/data/api/scanner_api.dart' as _i849;
+import 'package:kubo_dex/features/scanner/domain/mapper/diagnosis_mapper.dart'
+    as _i281;
+import 'package:kubo_dex/features/scanner/domain/services/scanner_service.dart'
+    as _i153;
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/cubits/scanner_cubit.dart'
     as _i401;
 
@@ -43,6 +46,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1060.SampleMapper>(() => const _i1060.SampleMapper());
     gh.factory<_i203.PreScanCubit>(() => _i203.PreScanCubit());
     gh.factory<_i144.DiagnosisCubit>(() => _i144.DiagnosisCubit());
+    gh.factory<_i281.DiagnosisMapper>(() => const _i281.DiagnosisMapper());
     gh.lazySingleton<_i782.NavigationService>(() => _i782.NavigationService());
     gh.lazySingleton<_i917.DioProvider>(() => _i917.DioProvider());
     gh.lazySingleton<_i74.Logger>(() => _i74.AppLogger());
@@ -56,6 +60,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<String>(instanceName: 'appServerUrl'),
       ),
     );
+    gh.lazySingleton<_i849.ScannerApi>(
+      () => _i849.ScannerApi(
+        gh<_i917.DioProvider>(),
+        gh<String>(instanceName: 'appServerUrl'),
+      ),
+    );
     gh.lazySingleton<_i139.HomeService>(
       () => _i139.HomeServiceImpl(
         gh<_i749.HomeApi>(),
@@ -63,11 +73,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i74.Logger>(),
       ),
     );
-    gh.lazySingleton<_i732.ScannerApiService>(
-      () => _i732.ScannerApiService(gh<_i917.DioProvider>(), gh<_i74.Logger>()),
+    gh.lazySingleton<_i153.ScannerService>(
+      () => _i153.ScannerServiceImpl(
+        gh<_i849.ScannerApi>(),
+        gh<_i281.DiagnosisMapper>(),
+        gh<_i74.Logger>(),
+      ),
     );
     gh.factory<_i401.ScannerCubit>(
-      () => _i401.ScannerCubit(gh<_i732.ScannerApiService>()),
+      () => _i401.ScannerCubit(gh<_i153.ScannerService>()),
     );
     return this;
   }

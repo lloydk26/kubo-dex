@@ -2,15 +2,15 @@ import 'dart:async';
 
 import 'package:injectable/injectable.dart';
 import 'package:kubo_dex/core/presentation/cubit/cubit_base.dart';
-import 'package:kubo_dex/features/scanner/data/scanner_api_service.dart';
+import 'package:kubo_dex/features/scanner/domain/services/scanner_service.dart';
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/models/scanner_state.dart';
 
 @injectable
 class ScannerCubit extends CubitBase<ScannerState> {
-  final ScannerApiService _apiService;
+  final ScannerService _scannerService;
   Timer? _nudgeTimer;
 
-  ScannerCubit(this._apiService) : super(const ScannerState());
+  ScannerCubit(this._scannerService) : super(const ScannerState());
 
   void onCameraReady() {
     emit(state.copyWith(status: ScannerStatus.ready));
@@ -28,7 +28,7 @@ class ScannerCubit extends CubitBase<ScannerState> {
     emit(state.copyWith(status: ScannerStatus.processing));
 
     try {
-      final result = await _apiService.analyzeCrop(imagePath);
+      final result = await _scannerService.analyzeCrop(imagePath);
       if (!isClosed) {
         emit(state.copyWith(status: ScannerStatus.done, result: result));
       }
@@ -43,10 +43,7 @@ class ScannerCubit extends CubitBase<ScannerState> {
   }
 
   void retryCapture() {
-    emit(state.copyWith(
-      status: ScannerStatus.ready,
-      error: null,
-    ));
+    emit(state.copyWith(status: ScannerStatus.ready, error: null));
     _startNudgeCycle();
   }
 

@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 enum HealthStatus { healthy, needsImproving, critical }
 
-// ── Nested response models ────────────────────────────────────────────────────
+// ── Domain value objects ──────────────────────────────────────────────────────
 
 class HealthBreakdown extends Equatable {
   final int foliage;
@@ -14,13 +14,6 @@ class HealthBreakdown extends Equatable {
     required this.stem,
     required this.coloration,
   });
-
-  factory HealthBreakdown.fromJson(Map<String, dynamic> json) =>
-      HealthBreakdown(
-        foliage: (json['foliage'] as num).toInt(),
-        stem: (json['stem'] as num).toInt(),
-        coloration: (json['coloration'] as num).toInt(),
-      );
 
   @override
   List<Object?> get props => [foliage, stem, coloration];
@@ -43,17 +36,6 @@ class HealthDetail extends Equatable {
     required this.breakdown,
   });
 
-  factory HealthDetail.fromJson(Map<String, dynamic> json) => HealthDetail(
-        status: json['status'] as String,
-        isHealthy: json['is_healthy'] as bool,
-        condition: json['condition'] as String,
-        diseaseConfidencePct:
-            (json['disease_confidence_pct'] as num).toDouble(),
-        cropConfidencePct: (json['crop_confidence_pct'] as num).toDouble(),
-        breakdown:
-            HealthBreakdown.fromJson(json['breakdown'] as Map<String, dynamic>),
-      );
-
   @override
   List<Object?> get props => [
         status,
@@ -71,16 +53,11 @@ class HealthData extends Equatable {
 
   const HealthData({required this.score, required this.data});
 
-  factory HealthData.fromJson(Map<String, dynamic> json) => HealthData(
-        score: (json['score'] as num).toInt(),
-        data: HealthDetail.fromJson(json['data'] as Map<String, dynamic>),
-      );
-
   @override
   List<Object?> get props => [score, data];
 }
 
-// ── Root response model ───────────────────────────────────────────────────────
+// ── Root entity ───────────────────────────────────────────────────────────────
 
 class DiagnosisResult extends Equatable {
   final double confidence;
@@ -101,17 +78,7 @@ class DiagnosisResult extends Equatable {
     required this.recommendation,
   });
 
-  factory DiagnosisResult.fromJson(Map<String, dynamic> json) => DiagnosisResult(
-        confidence: (json['confidence'] as num).toDouble(),
-        image: json['image'] as String,
-        name: json['name'] as String,
-        type: List<String>.from(json['type'] as List),
-        description: json['description'] as String,
-        health: HealthData.fromJson(json['health'] as Map<String, dynamic>),
-        recommendation: List<String>.from(json['recommendation'] as List),
-      );
-
-  // ── Derived UI helpers ──────────────────────────────────────────────────────
+  // ── Derived helpers ─────────────────────────────────────────────────────────
 
   HealthStatus get healthStatus {
     if (health.data.isHealthy) return HealthStatus.healthy;
@@ -123,5 +90,12 @@ class DiagnosisResult extends Equatable {
   }
 
   @override
-  List<Object?> get props => [confidence, image, name, type, health, recommendation];
+  List<Object?> get props => [
+        confidence,
+        image,
+        name,
+        type,
+        health,
+        recommendation,
+      ];
 }

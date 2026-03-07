@@ -12,7 +12,7 @@ class ServiceLocator {
 
   static void registerInitialDependencies() {
     instance.registerSingleton<String>(
-      'https://api.example.com',
+      'http://18.136.103.92:8000',
       instanceName: 'appServerUrl',
     );
     configureDependencies();

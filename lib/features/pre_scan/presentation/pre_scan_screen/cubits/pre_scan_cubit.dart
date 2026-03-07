@@ -7,12 +7,17 @@ import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/models/p
 class PreScanCubit extends CubitBase<PreScanState> {
   PreScanCubit() : super(const PreScanState());
 
+  void selectAuto() {
+    emit(state.copyWith(isAuto: true, clearCrop: true));
+  }
+
   void selectCrop(CropType crop) {
-    final alreadySelected = state.selectedCrop == crop;
+    final alreadySelected = !state.isAuto && state.selectedCrop == crop;
     if (alreadySelected) {
-      emit(state.copyWith(clearCrop: true));
+      // Tapping the active crop deselects it → revert to Auto
+      emit(state.copyWith(isAuto: true, clearCrop: true));
     } else {
-      emit(state.copyWith(selectedCrop: crop));
+      emit(state.copyWith(selectedCrop: crop, isAuto: false));
     }
   }
 
