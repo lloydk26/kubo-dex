@@ -10,8 +10,13 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:get_it/get_it.dart' as _i174;
+import 'package:hive/hive.dart' as _i979;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:kubo_dex/core/data/api/dio_provider.dart' as _i917;
+import 'package:kubo_dex/core/data/repositories/scan_history_repository.dart'
+    as _i701;
+import 'package:kubo_dex/core/data/repositories/scan_stats_repository.dart'
+    as _i366;
 import 'package:kubo_dex/core/infrastructure/logging/logger.dart' as _i74;
 import 'package:kubo_dex/core/infrastructure/navigation/navigation_service.dart'
     as _i782;
@@ -42,6 +47,7 @@ import 'package:kubo_dex/features/weather/domain/services/weather_service.dart'
     as _i1047;
 import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/cubits/weather_forecast_card_cubit.dart'
     as _i374;
+import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -58,10 +64,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i782.NavigationService>(() => _i782.NavigationService());
     gh.lazySingleton<_i917.DioProvider>(() => _i917.DioProvider());
     gh.lazySingleton<_i74.Logger>(() => _i74.AppLogger());
-    gh.lazySingleton<_i39.SharedPrefsService>(
-      () => _i39.SharedPrefsServiceImpl(),
+    gh.lazySingleton<_i701.ScanHistoryRepository>(
+      () => _i701.ScanHistoryRepositoryImpl(
+        gh<_i979.Box<dynamic>>(instanceName: 'scanHistoryBox'),
+      ),
     );
-    gh.factory<_i314.HomeCubit>(() => _i314.HomeCubit(gh<_i74.Logger>()));
+    gh.lazySingleton<_i39.SharedPrefsService>(
+      () => _i39.SharedPrefsServiceImpl(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i749.HomeApi>(
       () => _i749.HomeApi(
         gh<_i917.DioProvider>(),
@@ -81,6 +91,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i74.Logger>(),
       ),
     );
+    gh.lazySingleton<_i366.ScanStatsRepository>(
+      () => _i366.ScanStatsRepositoryImpl(gh<_i39.SharedPrefsService>()),
+    );
     gh.lazySingleton<_i411.WeatherApi>(
       () => _i411.WeatherApi(
         gh<_i917.DioProvider>(),
@@ -92,6 +105,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i849.ScannerApi>(),
         gh<_i281.DiagnosisMapper>(),
         gh<_i74.Logger>(),
+        gh<_i366.ScanStatsRepository>(),
+        gh<_i701.ScanHistoryRepository>(),
       ),
     );
     gh.lazySingleton<_i1047.WeatherService>(
@@ -99,6 +114,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i411.WeatherApi>(),
         gh<_i452.WeatherMapper>(),
         gh<_i74.Logger>(),
+      ),
+    );
+    gh.factory<_i314.HomeCubit>(
+      () => _i314.HomeCubit(
+        gh<_i74.Logger>(),
+        gh<_i366.ScanStatsRepository>(),
+        gh<_i701.ScanHistoryRepository>(),
       ),
     );
     gh.factory<_i401.ScannerCubit>(

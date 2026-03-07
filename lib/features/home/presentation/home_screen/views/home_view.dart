@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:kubo_dex/core/dependency_injection.dart';
+import 'package:kubo_dex/features/app/presentation/views/init_app.dart';
 import 'package:kubo_dex/features/home/domain/entities/scan_record.dart';
 import 'package:kubo_dex/features/home/presentation/home_screen/cubits/home_cubit.dart';
 import 'package:kubo_dex/features/home/presentation/home_screen/models/home_state.dart';
@@ -12,7 +13,6 @@ import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/vie
 import 'package:kubo_dex/shared/resources/theme.dart';
 import 'package:kubo_dex/shared/widgets/app_drawer.dart';
 import 'package:kubo_dex/shared/widgets/app_header.dart';
-import 'package:kubo_dex/shared/widgets/loading_indicator.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -21,20 +21,35 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with RouteAware {
   int _selectedNavIndex = 0;
   late final WeatherForecastCardCubit _weatherCubit;
+  late final HomeCubit _homeCubit;
 
   @override
   void initState() {
     super.initState();
     _weatherCubit =
         ServiceLocator.instance<WeatherForecastCardCubit>()..onInitialize();
+    _homeCubit = ServiceLocator.instance<HomeCubit>()..onInitialize();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void didPopNext() {
+    _homeCubit.loadDashboard();
   }
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _weatherCubit.close();
+    _homeCubit.close();
     super.dispose();
   }
 
@@ -42,9 +57,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) => ServiceLocator.instance<HomeCubit>()..onInitialize(),
-        ),
+        BlocProvider.value(value: _homeCubit),
         BlocProvider.value(value: _weatherCubit),
       ],
       child: Scaffold(
@@ -54,12 +67,7 @@ class _HomeViewState extends State<HomeView> {
           onTap: (i) => setState(() => _selectedNavIndex = i),
         ),
         body: BlocBuilder<HomeCubit, HomeState>(
-          builder: (context, state) {
-            if (state.isLoading) {
-              return const LoadingIndicator();
-            }
-            return _HomeBody(state: state);
-          },
+          builder: (context, state) => _HomeBody(state: state),
         ),
       ),
     );
@@ -97,12 +105,18 @@ class _HomeBody extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _StatsRow(
-                  totalScans: state.totalScans,
-                  averageGrade: state.averageGrade,
-                ),
+                if (state.isLoading)
+                  const _StatsRowSkeleton()
+                else
+                  _StatsRow(
+                    totalScans: state.totalScans,
+                    averageGrade: state.averageGrade,
+                  ),
                 const SizedBox(height: 16),
-                _RecentScansSection(scans: state.recentScans),
+                if (state.isLoading)
+                  const _RecentScansSkeleton()
+                else
+                  _RecentScansSection(scans: state.recentScans),
                 const SizedBox(height: 24),
                 const WeatherForecastCard(),
                 const SizedBox(height: 24),
@@ -197,11 +211,120 @@ class _ScanButton extends StatelessWidget {
   }
 }
 
+class _StatsRowSkeleton extends StatefulWidget {
+  const _StatsRowSkeleton();
+
+  @override
+  State<_StatsRowSkeleton> createState() => _StatsRowSkeletonState();
+}
+
+class _StatsRowSkeletonState extends State<_StatsRowSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.35, end: 0.75).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (_, __) => Row(
+        children: [
+          Expanded(child: _SkeletonStatCard(opacity: _opacity.value)),
+          const SizedBox(width: 12),
+          Expanded(child: _SkeletonStatCard(opacity: _opacity.value)),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonStatCard extends StatelessWidget {
+  final double opacity;
+
+  const _SkeletonStatCard({required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = AppColors.textMuted.withValues(alpha: opacity);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 56,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: fill,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: 36,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: fill,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatsRow extends StatelessWidget {
   final int totalScans;
   final String averageGrade;
 
   const _StatsRow({required this.totalScans, required this.averageGrade});
+
+  Color get _gradeColor => switch (averageGrade) {
+        'A' => AppColors.gradeA,
+        'B' => AppColors.gradeB,
+        'C' => AppColors.gradeC,
+        _ => AppColors.textMuted,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -219,9 +342,10 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.check_circle_rounded,
-            iconColor: AppColors.gradeA,
+            iconColor: _gradeColor,
             label: 'Average Grade',
             value: averageGrade,
+            valueColor: _gradeColor,
           ),
         ),
       ],
@@ -234,12 +358,14 @@ class _StatCard extends StatelessWidget {
   final Color iconColor;
   final String label;
   final String value;
+  final Color? valueColor;
 
   const _StatCard({
     required this.icon,
     required this.iconColor,
     required this.label,
     required this.value,
+    this.valueColor,
   });
 
   @override
@@ -277,13 +403,137 @@ class _StatCard extends StatelessWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textDark,
+                  color: valueColor ?? AppColors.textDark,
                   height: 1.1,
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RecentScansSkeleton extends StatefulWidget {
+  const _RecentScansSkeleton();
+
+  @override
+  State<_RecentScansSkeleton> createState() => _RecentScansSkeletonState();
+}
+
+class _RecentScansSkeletonState extends State<_RecentScansSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.35, end: 0.75).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'RECENT SCANS',
+          style: GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textMuted,
+            letterSpacing: 1.4,
+          ),
+        ),
+        const SizedBox(height: 14),
+        AnimatedBuilder(
+          animation: _opacity,
+          builder: (_, __) => SizedBox(
+            height: 160,
+            child: Row(
+              children: [
+                _SkeletonScanCard(opacity: _opacity.value),
+                const SizedBox(width: 12),
+                _SkeletonScanCard(opacity: _opacity.value),
+                const SizedBox(width: 12),
+                _SkeletonScanCard(opacity: _opacity.value),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SkeletonScanCard extends StatelessWidget {
+  final double opacity;
+
+  const _SkeletonScanCard({required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = AppColors.textMuted.withValues(alpha: opacity);
+    return Container(
+      width: 110,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(height: 82, color: fill),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 12,
+                    width: 70,
+                    decoration: BoxDecoration(
+                      color: fill,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 10,
+                    width: 44,
+                    decoration: BoxDecoration(
+                      color: fill,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
