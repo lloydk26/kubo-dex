@@ -151,7 +151,12 @@ class _PreScanContent extends StatelessWidget {
                           context.read<PreScanCubit>().setCaptureMode(mode),
                     ),
                     const SizedBox(height: 14),
-                    _OpenCameraButton(enabled: state.canProceed),
+                    _OpenCameraButton(
+                      enabled: state.canProceed,
+                      plant: state.isAuto
+                          ? null
+                          : state.selectedCrop?.name.toLowerCase(),
+                    ),
                   ],
                 ),
               );
@@ -589,8 +594,9 @@ class _TogglePill extends StatelessWidget {
 
 class _OpenCameraButton extends StatelessWidget {
   final bool enabled;
+  final String? plant;
 
-  const _OpenCameraButton({required this.enabled});
+  const _OpenCameraButton({required this.enabled, this.plant});
 
   @override
   Widget build(BuildContext context) {
@@ -605,7 +611,7 @@ class _OpenCameraButton extends StatelessWidget {
               ? () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const ScannerViewProvider(),
+                    builder: (_) => ScannerViewProvider(plant: plant),
                   ),
                 )
               : null,

@@ -4,10 +4,12 @@ import 'package:injectable/injectable.dart';
 import 'package:kubo_dex/core/infrastructure/logging/logger.dart';
 import 'package:kubo_dex/features/diagnosis/domain/entities/diagnosis_result.dart';
 import 'package:kubo_dex/features/scanner/data/api/scanner_api.dart';
+import 'package:kubo_dex/features/scanner/data/contracts/analyze_crop_request_contract.dart';
 import 'package:kubo_dex/features/scanner/domain/mapper/diagnosis_mapper.dart';
 
+
 abstract interface class ScannerService {
-  Future<DiagnosisResult> analyzeCrop(String imagePath);
+  Future<DiagnosisResult> analyzeCrop(String imagePath, {String? plant});
 }
 
 @LazySingleton(as: ScannerService)
@@ -23,15 +25,23 @@ class ScannerServiceImpl implements ScannerService {
   );
 
   @override
-  Future<DiagnosisResult> analyzeCrop(String imagePath) async {
+  Future<DiagnosisResult> analyzeCrop(String imagePath, {String? plant}) async {
     _logger.log(
       LogLevel.info,
       '[ScannerService] analyzeCrop → POST /analyze\n'
-      '  image: $imagePath',
+      '  image: $imagePath\n'
+      '  plant: ${plant ?? '(auto)'}',
     );
 
     try {
-      final response = await _scannerApi.analyzeCrop(File(imagePath));
+      final request = AnalyzeCropRequestContract(
+        image: File(imagePath),
+        plant: plant,
+      );
+      final response = await _scannerApi.analyzeCrop(
+        request.image,
+        plant: request.plant,
+      );
 
       _logger.log(
         LogLevel.info,

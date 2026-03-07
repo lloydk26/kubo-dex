@@ -284,7 +284,9 @@ class _HealthStatusCard extends StatelessWidget {
 
           // Score + confidence
           Text(
-            'Health Score: ${result.health.score}/100 · ${result.health.data.diseaseConfidencePct.toStringAsFixed(1)}% confidence',
+            result.health.data.diseaseConfidencePct != null
+                ? 'Health Score: ${result.health.score}/100 · ${result.health.data.diseaseConfidencePct!.toStringAsFixed(1)}% confidence'
+                : 'Health Score: ${result.health.score}/100',
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
               fontSize: 12,
@@ -294,35 +296,38 @@ class _HealthStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Condition
-          Text(
-            result.health.data.condition,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textDark,
-              height: 1.4,
+          // Condition (only shown when present)
+          if (result.health.data.condition != null) ...[
+            Text(
+              result.health.data.condition!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+                height: 1.4,
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+          ],
 
-          const SizedBox(height: 16),
-
-          // Breakdown bars
-          _BreakdownRow(
-            label: 'Foliage',
-            value: result.health.data.breakdown.foliage,
-          ),
-          const SizedBox(height: 6),
-          _BreakdownRow(
-            label: 'Stem',
-            value: result.health.data.breakdown.stem,
-          ),
-          const SizedBox(height: 6),
-          _BreakdownRow(
-            label: 'Coloration',
-            value: result.health.data.breakdown.coloration,
-          ),
+          // Breakdown bars (only shown when present)
+          if (result.health.data.breakdown != null) ...[
+            _BreakdownRow(
+              label: 'Foliage',
+              value: result.health.data.breakdown!.foliage,
+            ),
+            const SizedBox(height: 6),
+            _BreakdownRow(
+              label: 'Stem',
+              value: result.health.data.breakdown!.stem,
+            ),
+            const SizedBox(height: 6),
+            _BreakdownRow(
+              label: 'Coloration',
+              value: result.health.data.breakdown!.coloration,
+            ),
+          ],
         ],
       ),
     );

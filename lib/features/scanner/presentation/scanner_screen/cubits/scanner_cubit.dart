@@ -21,14 +21,14 @@ class ScannerCubit extends CubitBase<ScannerState> {
     emit(state.copyWith(status: ScannerStatus.initializing, error: message));
   }
 
-  Future<void> capturePhoto(String imagePath) async {
+  Future<void> capturePhoto(String imagePath, {String? plant}) async {
     if (!state.isReady) return;
     _nudgeTimer?.cancel();
     _nudgeTimer = null;
     emit(state.copyWith(status: ScannerStatus.processing));
 
     try {
-      final result = await _scannerService.analyzeCrop(imagePath);
+      final result = await _scannerService.analyzeCrop(imagePath, plant: plant);
       if (!isClosed) {
         emit(state.copyWith(status: ScannerStatus.done, result: result));
       }

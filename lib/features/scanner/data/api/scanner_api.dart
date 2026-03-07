@@ -18,6 +18,7 @@ abstract interface class ScannerApi {
   @MultiPart()
   @POST('/analyze')
   Future<AnalyzeCropResponseContract> analyzeCrop(
-    @Part(name: 'image') File image,
-  );
+    @Part(name: 'image') File image, {
+    @Part(name: 'plant') String? plant,
+  });
 }

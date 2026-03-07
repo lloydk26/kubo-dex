@@ -32,7 +32,9 @@ class DiagnosisMapper {
       condition: contract.condition,
       diseaseConfidencePct: contract.diseaseConfidencePct,
       cropConfidencePct: contract.cropConfidencePct,
-      breakdown: _toHealthBreakdown(contract.breakdown),
+      breakdown: contract.breakdown == null
+          ? null
+          : _toHealthBreakdown(contract.breakdown!),
     );
   }
 

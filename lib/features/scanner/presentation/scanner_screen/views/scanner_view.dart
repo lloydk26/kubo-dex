@@ -13,7 +13,9 @@ import 'package:kubo_dex/features/scanner/presentation/scanner_screen/models/sca
 import 'package:kubo_dex/shared/resources/theme.dart';
 
 class ScannerView extends StatefulWidget {
-  const ScannerView({super.key});
+  final String? plant;
+
+  const ScannerView({super.key, this.plant});
 
   @override
   State<ScannerView> createState() => _ScannerViewState();
@@ -159,9 +161,10 @@ class _ScannerViewState extends State<ScannerView> {
                   enabled: state.isReady,
                   onPressed: () {
                     final cubit = context.read<ScannerCubit>();
+                    final plant = widget.plant;
                     _controller?.takePicture().then((file) {
                       if (mounted) {
-                        cubit.capturePhoto(file.path);
+                        cubit.capturePhoto(file.path, plant: plant);
                       }
                     });
                   },
@@ -178,13 +181,15 @@ class _ScannerViewState extends State<ScannerView> {
 // ── Provider wrapper (used by navigation) ────────────────────────────────────
 
 class ScannerViewProvider extends StatelessWidget {
-  const ScannerViewProvider({super.key});
+  final String? plant;
+
+  const ScannerViewProvider({super.key, this.plant});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ServiceLocator.instance<ScannerCubit>(),
-      child: const ScannerView(),
+      child: ScannerView(plant: plant),
     );
   }
 }

@@ -30,18 +30,18 @@ class HealthBreakdownContract extends JsonSerializableObject {
 class HealthDetailContract extends JsonSerializableObject {
   final String status;
   final bool isHealthy;
-  final String condition;
-  final double diseaseConfidencePct;
+  final String? condition;
+  final double? diseaseConfidencePct;
   final double cropConfidencePct;
-  final HealthBreakdownContract breakdown;
+  final HealthBreakdownContract? breakdown;
 
   const HealthDetailContract({
     required this.status,
     required this.isHealthy,
-    required this.condition,
-    required this.diseaseConfidencePct,
+    this.condition,
+    this.diseaseConfidencePct,
     required this.cropConfidencePct,
-    required this.breakdown,
+    this.breakdown,
   });
 
   factory HealthDetailContract.fromJson(Map<String, dynamic> json) =>

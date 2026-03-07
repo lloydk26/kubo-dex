@@ -22,18 +22,18 @@ class HealthBreakdown extends Equatable {
 class HealthDetail extends Equatable {
   final String status;
   final bool isHealthy;
-  final String condition;
-  final double diseaseConfidencePct;
+  final String? condition;
+  final double? diseaseConfidencePct;
   final double cropConfidencePct;
-  final HealthBreakdown breakdown;
+  final HealthBreakdown? breakdown;
 
   const HealthDetail({
     required this.status,
     required this.isHealthy,
-    required this.condition,
-    required this.diseaseConfidencePct,
+    this.condition,
+    this.diseaseConfidencePct,
     required this.cropConfidencePct,
-    required this.breakdown,
+    this.breakdown,
   });
 
   @override
