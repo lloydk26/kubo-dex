@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:kubo_dex/core/dependency_injection.dart';
 import 'package:kubo_dex/features/weather/domain/entities/location_permission_status.dart';
 import 'package:kubo_dex/features/weather/domain/entities/weather_forecast.dart';
 import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/cubits/weather_forecast_card_cubit.dart';
@@ -24,35 +23,31 @@ class WeatherForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          ServiceLocator.instance<WeatherForecastCardCubit>()..onInitialize(),
-      child: BlocBuilder<WeatherForecastCardCubit, WeatherForecastCardState>(
-        builder: (context, state) {
-          // Waiting for or showing the native permission dialog
-          if (state.permissionStatus == LocationPermissionStatus.unknown ||
-              state.permissionStatus == LocationPermissionStatus.requesting) {
-            return const _CardSkeleton();
-          }
+    return BlocBuilder<WeatherForecastCardCubit, WeatherForecastCardState>(
+      builder: (context, state) {
+        // Waiting for or showing the native permission dialog
+        if (state.permissionStatus == LocationPermissionStatus.unknown ||
+            state.permissionStatus == LocationPermissionStatus.requesting) {
+          return const _CardSkeleton();
+        }
 
-          // User denied location — show actionable banner
-          if (state.permissionStatus == LocationPermissionStatus.denied) {
-            return _LocationPermissionBanner(
-              onTap: () => context
-                  .read<WeatherForecastCardCubit>()
-                  .retryLocationPermission(),
-            );
-          }
+        // User denied location — show actionable banner
+        if (state.permissionStatus == LocationPermissionStatus.denied) {
+          return _LocationPermissionBanner(
+            onTap: () => context
+                .read<WeatherForecastCardCubit>()
+                .retryLocationPermission(),
+          );
+        }
 
-          // Granted but still fetching
-          if (state.isLoading) return const _CardSkeleton();
+        // Granted but still fetching
+        if (state.isLoading) return const _CardSkeleton();
 
-          // Error or no data — hide gracefully
-          if (state.hasError || state.isEmpty) return const SizedBox.shrink();
+        // Error or no data — hide gracefully
+        if (state.hasError || state.isEmpty) return const SizedBox.shrink();
 
-          return _ForecastCard(state: state);
-        },
-      ),
+        return _ForecastCard(state: state);
+      },
     );
   }
 }

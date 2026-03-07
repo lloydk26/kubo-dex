@@ -7,8 +7,9 @@ import 'package:kubo_dex/features/home/domain/entities/scan_record.dart';
 import 'package:kubo_dex/features/home/presentation/home_screen/cubits/home_cubit.dart';
 import 'package:kubo_dex/features/home/presentation/home_screen/models/home_state.dart';
 import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/views/pre_scan_view.dart';
-import 'package:kubo_dex/shared/resources/theme.dart';
+import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/cubits/weather_forecast_card_cubit.dart';
 import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/views/weather_forecast_card.dart';
+import 'package:kubo_dex/shared/resources/theme.dart';
 import 'package:kubo_dex/shared/widgets/app_drawer.dart';
 import 'package:kubo_dex/shared/widgets/app_header.dart';
 import 'package:kubo_dex/shared/widgets/loading_indicator.dart';
@@ -22,11 +23,30 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   int _selectedNavIndex = 0;
+  late final WeatherForecastCardCubit _weatherCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _weatherCubit =
+        ServiceLocator.instance<WeatherForecastCardCubit>()..onInitialize();
+  }
+
+  @override
+  void dispose() {
+    _weatherCubit.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ServiceLocator.instance<HomeCubit>()..onInitialize(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => ServiceLocator.instance<HomeCubit>()..onInitialize(),
+        ),
+        BlocProvider.value(value: _weatherCubit),
+      ],
       child: Scaffold(
         backgroundColor: AppColors.background,
         endDrawer: AppDrawer(
@@ -54,34 +74,42 @@ class _HomeBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              const AppHeader(),
-              const SizedBox(height: 28),
-              _Greeting(),
-              const SizedBox(height: 32),
-              _ScanButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const PreScanView()),
+      child: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: () => context.read<WeatherForecastCardCubit>().refresh(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                const AppHeader(),
+                const SizedBox(height: 28),
+                _Greeting(),
+                const SizedBox(height: 32),
+                _ScanButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PreScanView()),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              _StatsRow(
-                totalScans: state.totalScans,
-                averageGrade: state.averageGrade,
-              ),
-              const SizedBox(height: 16),
-              _RecentScansSection(scans: state.recentScans),
-              const SizedBox(height: 24),
-              const WeatherForecastCard(),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 24),
+                _StatsRow(
+                  totalScans: state.totalScans,
+                  averageGrade: state.averageGrade,
+                ),
+                const SizedBox(height: 16),
+                _RecentScansSection(scans: state.recentScans),
+                const SizedBox(height: 24),
+                const WeatherForecastCard(),
+                const SizedBox(height: 24),
+                const _ComingSoonSection(),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -444,6 +472,295 @@ class _EmptyScans extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Coming Soon Section ───────────────────────────────────────────────────────
+
+class _ComingSoonSection extends StatelessWidget {
+  const _ComingSoonSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "WHAT'S COMING",
+          style: GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textMuted,
+            letterSpacing: 1.4,
+          ),
+        ),
+        const SizedBox(height: 14),
+        const _MarketplaceCard(),
+        const SizedBox(height: 12),
+        const _SmartFarmCard(),
+      ],
+    );
+  }
+}
+
+// ── Marketplace Card ──────────────────────────────────────────────────────────
+
+class _MarketplaceCard extends StatelessWidget {
+  const _MarketplaceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _ComingSoonCard(
+      accentColor: Color(0xFFF7FEE7),
+      emoji: '🛒',
+      title: 'KuboDex Marketplace',
+      description:
+          'Sell your harvest directly to buyers — priced by quality, powered by your scan data.',
+      pills: [
+        _FeaturePill(label: '🏷️  Quality-based pricing'),
+        _FeaturePill(label: '🚜  Direct to buyer'),
+        _FeaturePill(label: '📦  Grade-verified listings'),
+      ],
+      notifyMessage: "We'll let you know when Marketplace launches!",
+    );
+  }
+}
+
+// ── Smart Farm Card ───────────────────────────────────────────────────────────
+
+class _SmartFarmCard extends StatelessWidget {
+  const _SmartFarmCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _ComingSoonCard(
+      accentColor: Color(0xFFF0FDF4),
+      emoji: '📡',
+      title: 'Smart Farm Intelligence',
+      description:
+          'Connect IoT soil sensors for personalized crop rotation, planting schedules, and treatment plans.',
+      pills: [
+        _FeaturePill(label: '🌡️  Soil monitoring'),
+        _FeaturePill(label: '🔄  Crop rotation plans'),
+        _FeaturePill(label: '📅  Planting schedules'),
+      ],
+      notifyMessage:
+          "We'll let you know when Smart Farm Intelligence launches!",
+    );
+  }
+}
+
+// ── Shared card shell ─────────────────────────────────────────────────────────
+
+class _ComingSoonCard extends StatelessWidget {
+  final Color accentColor;
+  final String emoji;
+  final String title;
+  final String description;
+  final List<_FeaturePill> pills;
+  final String notifyMessage;
+
+  const _ComingSoonCard({
+    required this.accentColor,
+    required this.emoji,
+    required this.title,
+    required this.description,
+    required this.pills,
+    required this.notifyMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            decoration: BoxDecoration(
+              color: accentColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 36)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _ComingSoonBadge(),
+                      const SizedBox(height: 6),
+                      Text(
+                        title,
+                        style: GoogleFonts.nunito(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primary,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  description,
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: pills,
+                ),
+                const SizedBox(height: 16),
+                _NotifyMeButton(message: notifyMessage),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── COMING SOON badge ─────────────────────────────────────────────────────────
+
+class _ComingSoonBadge extends StatelessWidget {
+  const _ComingSoonBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('✨', style: TextStyle(fontSize: 10)),
+          const SizedBox(width: 4),
+          Text(
+            'COMING SOON',
+            style: GoogleFonts.nunito(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFFD97706),
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Feature pill ──────────────────────────────────────────────────────────────
+
+class _FeaturePill extends StatelessWidget {
+  final String label;
+
+  const _FeaturePill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.nunito(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textDark,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Notify Me button ──────────────────────────────────────────────────────────
+
+class _NotifyMeButton extends StatelessWidget {
+  final String message;
+
+  const _NotifyMeButton({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: 0.55,
+      child: SizedBox(
+        width: double.infinity,
+        height: 44,
+        child: OutlinedButton(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  message,
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.w600),
+                ),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          },
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.primary),
+            foregroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: Text(
+            'Notify Me When Live',
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
       ),
     );
   }

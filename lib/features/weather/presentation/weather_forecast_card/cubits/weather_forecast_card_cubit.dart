@@ -56,6 +56,16 @@ class WeatherForecastCardCubit extends CubitBase<WeatherForecastCardState> {
     }
   }
 
+  /// Re-fetches forecast data. If permission was never granted it re-runs the
+  /// full permission + fetch flow instead.
+  Future<void> refresh() async {
+    if (state.permissionStatus == LocationPermissionStatus.granted) {
+      await _fetchForecast();
+    } else {
+      await _checkAndRequestLocation();
+    }
+  }
+
   /// Opens Android/iOS app settings so the user can grant location.
   /// The card shows [_LocationPermissionBanner] which calls this.
   Future<void> retryLocationPermission() async {
