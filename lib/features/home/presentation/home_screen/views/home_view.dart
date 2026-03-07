@@ -8,7 +8,7 @@ import 'package:kubo_dex/features/home/presentation/home_screen/cubits/home_cubi
 import 'package:kubo_dex/features/home/presentation/home_screen/models/home_state.dart';
 import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/views/pre_scan_view.dart';
 import 'package:kubo_dex/shared/resources/theme.dart';
-import 'package:kubo_dex/shared/widgets/app_bottom_nav.dart';
+import 'package:kubo_dex/shared/widgets/app_drawer.dart';
 import 'package:kubo_dex/shared/widgets/app_header.dart';
 import 'package:kubo_dex/shared/widgets/loading_indicator.dart';
 
@@ -28,6 +28,10 @@ class _HomeViewState extends State<HomeView> {
       create: (_) => ServiceLocator.instance<HomeCubit>()..onInitialize(),
       child: Scaffold(
         backgroundColor: AppColors.background,
+        endDrawer: AppDrawer(
+          selectedIndex: _selectedNavIndex,
+          onTap: (i) => setState(() => _selectedNavIndex = i),
+        ),
         body: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, state) {
             if (state.isLoading) {
@@ -35,10 +39,6 @@ class _HomeViewState extends State<HomeView> {
             }
             return _HomeBody(state: state);
           },
-        ),
-        bottomNavigationBar: AppBottomNav(
-          selectedIndex: _selectedNavIndex,
-          onTap: (i) => setState(() => _selectedNavIndex = i),
         ),
       ),
     );

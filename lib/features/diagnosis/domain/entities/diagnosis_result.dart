@@ -1,78 +1,127 @@
 import 'package:equatable/equatable.dart';
-import 'package:kubo_dex/features/home/domain/entities/scan_record.dart';
 
 enum HealthStatus { healthy, needsImproving, critical }
 
-class RecommendationItem extends Equatable {
-  final String action;
-  final String timeline;
+// ── Nested response models ────────────────────────────────────────────────────
 
-  const RecommendationItem({required this.action, required this.timeline});
+class HealthBreakdown extends Equatable {
+  final int foliage;
+  final int stem;
+  final int coloration;
 
-  @override
-  List<Object?> get props => [action, timeline];
-}
-
-class DiagnosisResult extends Equatable {
-  final String cropName;
-  final String cropCategory;
-  final CropType cropType;
-  final HealthStatus healthStatus;
-  final int confidencePercent;
-  final String summary;
-  final String flavorText;
-  final List<RecommendationItem> recommendations;
-  final int harvestDays;
-  final DateTime scannedAt;
-
-  const DiagnosisResult({
-    required this.cropName,
-    required this.cropCategory,
-    required this.cropType,
-    required this.healthStatus,
-    required this.confidencePercent,
-    required this.summary,
-    required this.flavorText,
-    required this.recommendations,
-    required this.harvestDays,
-    required this.scannedAt,
+  const HealthBreakdown({
+    required this.foliage,
+    required this.stem,
+    required this.coloration,
   });
 
-  static DiagnosisResult mock() => DiagnosisResult(
-        cropName: 'Pechay',
-        cropCategory: 'Leafy',
-        cropType: CropType.pechay,
-        healthStatus: HealthStatus.needsImproving,
-        confidencePercent: 87,
-        summary: 'Your pechay shows signs of nitrogen deficiency.',
-        flavorText:
-            'A fast-growing leafy crop that thrives in cool, well-irrigated soil.',
-        recommendations: const [
-          RecommendationItem(
-            action: 'Apply nitrogen-rich fertilizer',
-            timeline: 'Every 3 days for 2 weeks',
-          ),
-          RecommendationItem(
-            action: 'Improve soil drainage and aeration',
-            timeline: 'Once before next watering cycle',
-          ),
-          RecommendationItem(
-            action: 'Reduce direct midday sun exposure',
-            timeline: 'Ongoing until recovery signs appear',
-          ),
-        ],
-        harvestDays: 50,
-        scannedAt: DateTime.now(),
+  factory HealthBreakdown.fromJson(Map<String, dynamic> json) =>
+      HealthBreakdown(
+        foliage: (json['foliage'] as num).toInt(),
+        stem: (json['stem'] as num).toInt(),
+        coloration: (json['coloration'] as num).toInt(),
+      );
+
+  @override
+  List<Object?> get props => [foliage, stem, coloration];
+}
+
+class HealthDetail extends Equatable {
+  final String status;
+  final bool isHealthy;
+  final String condition;
+  final double diseaseConfidencePct;
+  final double cropConfidencePct;
+  final HealthBreakdown breakdown;
+
+  const HealthDetail({
+    required this.status,
+    required this.isHealthy,
+    required this.condition,
+    required this.diseaseConfidencePct,
+    required this.cropConfidencePct,
+    required this.breakdown,
+  });
+
+  factory HealthDetail.fromJson(Map<String, dynamic> json) => HealthDetail(
+        status: json['status'] as String,
+        isHealthy: json['is_healthy'] as bool,
+        condition: json['condition'] as String,
+        diseaseConfidencePct:
+            (json['disease_confidence_pct'] as num).toDouble(),
+        cropConfidencePct: (json['crop_confidence_pct'] as num).toDouble(),
+        breakdown:
+            HealthBreakdown.fromJson(json['breakdown'] as Map<String, dynamic>),
       );
 
   @override
   List<Object?> get props => [
-        cropName,
-        cropType,
-        healthStatus,
-        confidencePercent,
-        summary,
-        harvestDays,
-        scannedAt,
+        status,
+        isHealthy,
+        condition,
+        diseaseConfidencePct,
+        cropConfidencePct,
+        breakdown,
       ];
+}
+
+class HealthData extends Equatable {
+  final int score;
+  final HealthDetail data;
+
+  const HealthData({required this.score, required this.data});
+
+  factory HealthData.fromJson(Map<String, dynamic> json) => HealthData(
+        score: (json['score'] as num).toInt(),
+        data: HealthDetail.fromJson(json['data'] as Map<String, dynamic>),
+      );
+
+  @override
+  List<Object?> get props => [score, data];
+}
+
+// ── Root response model ───────────────────────────────────────────────────────
+
+class DiagnosisResult extends Equatable {
+  final double confidence;
+  final String image;
+  final String name;
+  final List<String> type;
+  final String description;
+  final HealthData health;
+  final List<String> recommendation;
+
+  const DiagnosisResult({
+    required this.confidence,
+    required this.image,
+    required this.name,
+    required this.type,
+    required this.description,
+    required this.health,
+    required this.recommendation,
+  });
+
+  factory DiagnosisResult.fromJson(Map<String, dynamic> json) => DiagnosisResult(
+        confidence: (json['confidence'] as num).toDouble(),
+        image: json['image'] as String,
+        name: json['name'] as String,
+        type: List<String>.from(json['type'] as List),
+        description: json['description'] as String,
+        health: HealthData.fromJson(json['health'] as Map<String, dynamic>),
+        recommendation: List<String>.from(json['recommendation'] as List),
+      );
+
+  // ── Derived UI helpers ──────────────────────────────────────────────────────
+
+  HealthStatus get healthStatus {
+    if (health.data.isHealthy) return HealthStatus.healthy;
+    final s = health.data.status.toLowerCase();
+    if (s == 'poor' || s == 'critical' || s == 'severe') {
+      return HealthStatus.critical;
+    }
+    return HealthStatus.needsImproving;
+  }
+
+  @override
+  List<Object?> get props => [confidence, image, name, type, health, recommendation];
 }

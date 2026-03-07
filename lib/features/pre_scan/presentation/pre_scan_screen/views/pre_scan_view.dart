@@ -7,7 +7,7 @@ import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/cubits/p
 import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/models/pre_scan_state.dart';
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/views/scanner_view.dart';
 import 'package:kubo_dex/shared/resources/theme.dart';
-import 'package:kubo_dex/shared/widgets/app_bottom_nav.dart';
+import 'package:kubo_dex/shared/widgets/app_drawer.dart';
 import 'package:kubo_dex/shared/widgets/app_header.dart';
 
 class PreScanView extends StatelessWidget {
@@ -29,6 +29,12 @@ class _PreScanContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      endDrawer: AppDrawer(
+        selectedIndex: 0,
+        onTap: (i) {
+          if (i == 0) Navigator.of(context).popUntil((r) => r.isFirst);
+        },
+      ),
       body: Column(
         children: [
           SafeArea(
@@ -139,12 +145,6 @@ class _PreScanContent extends StatelessWidget {
                   ],
                 ),
               );
-            },
-          ),
-          AppBottomNav(
-            selectedIndex: 0,
-            onTap: (i) {
-              if (i == 0) Navigator.pop(context);
             },
           ),
         ],

@@ -70,6 +70,9 @@ dev_dependencies:
   injectable_generator: ^2.7.0
   retrofit_generator: ^9.1.8
 
+  # App Icons
+  flutter_launcher_icons: ^0.14.3
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -109,3 +112,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path_android: "assets/icon/play_store_512.png"
+  adaptive_icon_foreground: "assets/icon/res/mipmap-xxxhdpi/ic_launcher_foreground.png"
+  adaptive_icon_background: "assets/icon/res/mipmap-xxxhdpi/ic_launcher_background.png"
+  adaptive_icon_monochrome: "assets/icon/res/mipmap-xxxhdpi/ic_launcher_monochrome.png"
+  min_sdk_android: 21

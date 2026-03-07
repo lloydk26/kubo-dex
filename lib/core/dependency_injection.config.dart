@@ -28,6 +28,8 @@ import 'package:kubo_dex/features/home/presentation/home_screen/cubits/home_cubi
     as _i314;
 import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/cubits/pre_scan_cubit.dart'
     as _i203;
+import 'package:kubo_dex/features/scanner/data/scanner_api_service.dart'
+    as _i732;
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/cubits/scanner_cubit.dart'
     as _i401;
 
@@ -40,7 +42,6 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     gh.factory<_i1060.SampleMapper>(() => const _i1060.SampleMapper());
     gh.factory<_i203.PreScanCubit>(() => _i203.PreScanCubit());
-    gh.factory<_i401.ScannerCubit>(() => _i401.ScannerCubit());
     gh.factory<_i144.DiagnosisCubit>(() => _i144.DiagnosisCubit());
     gh.lazySingleton<_i782.NavigationService>(() => _i782.NavigationService());
     gh.lazySingleton<_i917.DioProvider>(() => _i917.DioProvider());
@@ -61,6 +62,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1060.SampleMapper>(),
         gh<_i74.Logger>(),
       ),
+    );
+    gh.lazySingleton<_i732.ScannerApiService>(
+      () => _i732.ScannerApiService(gh<_i917.DioProvider>(), gh<_i74.Logger>()),
+    );
+    gh.factory<_i401.ScannerCubit>(
+      () => _i401.ScannerCubit(gh<_i732.ScannerApiService>()),
     );
     return this;
   }

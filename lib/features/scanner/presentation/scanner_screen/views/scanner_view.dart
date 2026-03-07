@@ -5,15 +5,12 @@ import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:kubo_dex/core/dependency_injection.dart';
-import 'package:kubo_dex/features/diagnosis/domain/entities/diagnosis_result.dart';
 import 'package:kubo_dex/features/diagnosis/presentation/diagnosis_screen/views/diagnosis_view.dart';
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/cubits/scanner_cubit.dart';
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/models/scanner_state.dart';
 import 'package:kubo_dex/shared/resources/theme.dart';
-import 'package:kubo_dex/shared/widgets/app_bottom_nav.dart';
 
 class ScannerView extends StatefulWidget {
   const ScannerView({super.key});
@@ -73,22 +70,34 @@ class _ScannerViewState extends State<ScannerView> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ScannerCubit, ScannerState>(
-      listenWhen: (prev, curr) => curr.isDone && !prev.isDone,
-      listener: (context, state) => Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DiagnosisView(result: DiagnosisResult.mock()),
-        ),
-      ),
+      listenWhen: (prev, curr) =>
+          (curr.isDone && !prev.isDone) || (curr.hasError && !prev.hasError),
+      listener: (context, state) {
+        if (state.isDone && state.result != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DiagnosisView(result: state.result!),
+            ),
+          );
+        } else if (state.hasError && state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error!),
+              backgroundColor: Colors.red.shade700,
+              action: SnackBarAction(
+                label: 'Ulit',
+                textColor: Colors.white,
+                onPressed: () =>
+                    context.read<ScannerCubit>().retryCapture(),
+              ),
+            ),
+          );
+        }
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         body: _buildBody(),
-        bottomNavigationBar: AppBottomNav(
-          selectedIndex: 0,
-          onTap: (i) {
-            if (i == 0) Navigator.pop(context);
-          },
-        ),
       ),
     );
   }
@@ -118,9 +127,7 @@ class _ScannerViewState extends State<ScannerView> {
               ),
 
             // ── Corner bracket focus box ────────────────────────────────
-            Center(
-              child: _FocusBox(dimmed: state.isProcessing),
-            ),
+            Center(child: _FocusBox(dimmed: state.isProcessing)),
 
             // ── Processing spinner + text ───────────────────────────────
             if (state.isProcessing) const _ProcessingOverlay(),
@@ -139,9 +146,7 @@ class _ScannerViewState extends State<ScannerView> {
               top: 0,
               left: 0,
               right: 0,
-              child: _HeaderOverlay(
-                onBack: () => Navigator.pop(context),
-              ),
+              child: _HeaderOverlay(onBack: () => Navigator.pop(context)),
             ),
 
             // ── Shutter button ──────────────────────────────────────────
@@ -152,7 +157,14 @@ class _ScannerViewState extends State<ScannerView> {
               child: Center(
                 child: _ShutterButton(
                   enabled: state.isReady,
-                  onPressed: () => context.read<ScannerCubit>().capturePhoto(),
+                  onPressed: () {
+                    final cubit = context.read<ScannerCubit>();
+                    _controller?.takePicture().then((file) {
+                      if (mounted) {
+                        cubit.capturePhoto(file.path);
+                      }
+                    });
+                  },
                 ),
               ),
             ),
@@ -186,8 +198,8 @@ class _FullScreenCamera extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final scale = 1 /
-        (controller.value.aspectRatio * (size.width / size.height));
+    final scale =
+        1 / (controller.value.aspectRatio * (size.width / size.height));
 
     return ClipRect(
       child: Transform.scale(
@@ -312,9 +324,10 @@ class _DotsSpinnerState extends State<_DotsSpinner>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
   }
 
   @override
@@ -383,9 +396,7 @@ class _NudgePill extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.65),
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
         ),
         child: Text(
           text,
@@ -415,10 +426,7 @@ class _HeaderOverlay extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.55),
-            Colors.transparent,
-          ],
+          colors: [Colors.black.withValues(alpha: 0.55), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -427,14 +435,6 @@ class _HeaderOverlay extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
           child: Row(
             children: [
-              SvgPicture.asset(
-                'assets/images/logo.svg',
-                width: MediaQuery.sizeOf(context).width * 0.3,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
               const Spacer(),
               GestureDetector(
                 onTap: onBack,
@@ -540,7 +540,11 @@ class _CameraErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.camera_alt_outlined, color: Colors.white54, size: 56),
+            const Icon(
+              Icons.camera_alt_outlined,
+              color: Colors.white54,
+              size: 56,
+            ),
             const SizedBox(height: 16),
             Text(
               'Camera unavailable',

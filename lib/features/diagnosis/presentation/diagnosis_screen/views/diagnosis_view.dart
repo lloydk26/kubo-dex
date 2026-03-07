@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,8 +7,8 @@ import 'package:kubo_dex/core/dependency_injection.dart';
 import 'package:kubo_dex/features/diagnosis/domain/entities/diagnosis_result.dart';
 import 'package:kubo_dex/features/diagnosis/presentation/diagnosis_screen/cubits/diagnosis_cubit.dart';
 import 'package:kubo_dex/features/diagnosis/presentation/diagnosis_screen/models/diagnosis_state.dart';
-import 'package:kubo_dex/features/home/domain/entities/scan_record.dart';
 import 'package:kubo_dex/shared/resources/theme.dart';
+import 'package:kubo_dex/shared/widgets/app_drawer.dart';
 import 'package:kubo_dex/shared/widgets/app_header.dart';
 
 class DiagnosisView extends StatelessWidget {
@@ -32,6 +34,12 @@ class _DiagnosisContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      endDrawer: AppDrawer(
+        selectedIndex: 0,
+        onTap: (i) {
+          if (i == 0) Navigator.of(context).popUntil((r) => r.isFirst);
+        },
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -55,7 +63,7 @@ class _DiagnosisContent extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Text(
-                  '\u2018${result.flavorText}\u2019',
+                  '\u2018${result.description}\u2019',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.nunito(
                     fontSize: 14,
@@ -105,36 +113,57 @@ class _CropIdentityBanner extends StatelessWidget {
 
   const _CropIdentityBanner({required this.result});
 
-  String get _cropEmoji => switch (result.cropType) {
-        CropType.pechay => '🥬',
-        CropType.tomato => '🍅',
-        CropType.eggplant => '🍆',
-        CropType.rice => '🌾',
-        CropType.mais => '🌽',
-        CropType.other => '🌿',
+  Color _healthColor(HealthStatus s) => switch (s) {
+        HealthStatus.healthy => AppColors.gradeA,
+        HealthStatus.needsImproving => AppColors.gradeB,
+        HealthStatus.critical => AppColors.gradeC,
       };
 
   @override
   Widget build(BuildContext context) {
+    // Decode base64 image — format: "data:image/jpeg;base64,<data>"
+    final imageBytes = base64Decode(result.image.split(',').last);
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(_cropEmoji, style: const TextStyle(fontSize: 72)),
-          const SizedBox(width: 16),
+          // ── Crop photo ──────────────────────────────────────────
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.memory(
+              imageBytes,
+              width: 90,
+              height: 90,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.eco_rounded,
+                    color: Colors.white54, size: 40),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // ── Name + pills ────────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '\u2018${result.cropName.toUpperCase()}\u2019',
+                  '\u2018${result.name.toUpperCase()}\u2019',
                   style: GoogleFonts.nunito(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                     height: 1.1,
@@ -142,16 +171,20 @@ class _CropIdentityBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Wrap(
-                  spacing: 8,
+                  spacing: 6,
                   runSpacing: 6,
                   children: [
+                    // Crop type pills (first 2)
+                    ...result.type.take(2).map(
+                          (t) => _BannerPill(
+                            label: _capitalize(t),
+                            color: Colors.white.withValues(alpha: 0.22),
+                            textColor: Colors.white,
+                          ),
+                        ),
+                    // Health status pill
                     _BannerPill(
-                      label: result.cropCategory,
-                      color: Colors.white.withValues(alpha: 0.25),
-                      textColor: Colors.white,
-                    ),
-                    _BannerPill(
-                      label: _healthLabel(result.healthStatus),
+                      label: result.health.data.status,
                       color: _healthColor(result.healthStatus),
                       textColor: Colors.white,
                     ),
@@ -165,17 +198,8 @@ class _CropIdentityBanner extends StatelessWidget {
     );
   }
 
-  String _healthLabel(HealthStatus s) => switch (s) {
-        HealthStatus.healthy => 'Healthy',
-        HealthStatus.needsImproving => 'Needs Improving',
-        HealthStatus.critical => 'Critical',
-      };
-
-  Color _healthColor(HealthStatus s) => switch (s) {
-        HealthStatus.healthy => AppColors.gradeA,
-        HealthStatus.needsImproving => AppColors.gradeB,
-        HealthStatus.critical => AppColors.gradeC,
-      };
+  String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
 
 class _BannerPill extends StatelessWidget {
@@ -192,7 +216,7 @@ class _BannerPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(50),
@@ -200,7 +224,7 @@ class _BannerPill extends StatelessWidget {
       child: Text(
         label,
         style: GoogleFonts.nunito(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w700,
           color: textColor,
         ),
@@ -215,12 +239,6 @@ class _HealthStatusCard extends StatelessWidget {
   final DiagnosisResult result;
 
   const _HealthStatusCard({required this.result});
-
-  String get _statusLabel => switch (result.healthStatus) {
-        HealthStatus.healthy => 'Healthy',
-        HealthStatus.needsImproving => 'Needs Improving',
-        HealthStatus.critical => 'Critical',
-      };
 
   Color get _statusColor => switch (result.healthStatus) {
         HealthStatus.healthy => AppColors.gradeA,
@@ -246,6 +264,7 @@ class _HealthStatusCard extends StatelessWidget {
       ),
       child: Column(
         children: [
+          // Status pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             decoration: BoxDecoration(
@@ -253,7 +272,7 @@ class _HealthStatusCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(50),
             ),
             child: Text(
-              _statusLabel,
+              result.health.data.status,
               style: GoogleFonts.nunito(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -262,27 +281,102 @@ class _HealthStatusCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
+
+          // Score + confidence
           Text(
-            '${result.confidencePercent}% confidence',
+            'Health Score: ${result.health.score}/100 · ${result.health.data.diseaseConfidencePct.toStringAsFixed(1)}% confidence',
+            textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: AppColors.textMuted,
             ),
           ),
           const SizedBox(height: 8),
+
+          // Condition
           Text(
-            result.summary,
+            result.health.data.condition,
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: AppColors.textDark,
               height: 1.4,
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // Breakdown bars
+          _BreakdownRow(
+            label: 'Foliage',
+            value: result.health.data.breakdown.foliage,
+          ),
+          const SizedBox(height: 6),
+          _BreakdownRow(
+            label: 'Stem',
+            value: result.health.data.breakdown.stem,
+          ),
+          const SizedBox(height: 6),
+          _BreakdownRow(
+            label: 'Coloration',
+            value: result.health.data.breakdown.coloration,
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _BreakdownRow extends StatelessWidget {
+  final String label;
+  final int value;
+
+  const _BreakdownRow({required this.label, required this.value});
+
+  Color get _barColor {
+    if (value >= 70) return AppColors.gradeA;
+    if (value >= 40) return AppColors.gradeB;
+    return AppColors.gradeC;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 76,
+          child: Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value / 100,
+              backgroundColor: AppColors.divider,
+              valueColor: AlwaysStoppedAnimation<Color>(_barColor),
+              minHeight: 7,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$value',
+          style: GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -326,46 +420,7 @@ class _RecommendationsCard extends StatelessWidget {
           ),
 
           // Recommendation items
-          ...result.recommendations.map(
-            (item) => _RecommendationRow(item: item),
-          ),
-
-          const Divider(height: 1, color: AppColors.divider),
-
-          // Harvest estimate
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            child: Row(
-              children: [
-                Text(
-                  'Harvest Estimate',
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.divider),
-                  ),
-                  child: Text(
-                    '${result.harvestDays} days',
-                    style: GoogleFonts.nunito(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ...result.recommendation.map((item) => _RecommendationRow(text: item)),
 
           const Divider(height: 1, color: AppColors.divider),
 
@@ -389,9 +444,8 @@ class _RecommendationsCard extends StatelessWidget {
                       child: _FeedbackButton(
                         label: '👎  Not Helpful',
                         isSelected: state.feedbackHelpful == false,
-                        onTap: () => context
-                            .read<DiagnosisCubit>()
-                            .submitFeedback(false),
+                        onTap: () =>
+                            context.read<DiagnosisCubit>().submitFeedback(false),
                       ),
                     ),
                   ],
@@ -406,9 +460,9 @@ class _RecommendationsCard extends StatelessWidget {
 }
 
 class _RecommendationRow extends StatelessWidget {
-  final RecommendationItem item;
+  final String text;
 
-  const _RecommendationRow({required this.item});
+  const _RecommendationRow({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -420,27 +474,14 @@ class _RecommendationRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.divider),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.action,
-            style: GoogleFonts.nunito(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            item.timeline,
-            style: GoogleFonts.nunito(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: GoogleFonts.nunito(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textDark,
+          height: 1.4,
+        ),
       ),
     );
   }

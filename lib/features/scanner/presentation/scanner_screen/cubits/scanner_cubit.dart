@@ -2,13 +2,15 @@ import 'dart:async';
 
 import 'package:injectable/injectable.dart';
 import 'package:kubo_dex/core/presentation/cubit/cubit_base.dart';
+import 'package:kubo_dex/features/scanner/data/scanner_api_service.dart';
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/models/scanner_state.dart';
 
 @injectable
 class ScannerCubit extends CubitBase<ScannerState> {
+  final ScannerApiService _apiService;
   Timer? _nudgeTimer;
 
-  ScannerCubit() : super(const ScannerState());
+  ScannerCubit(this._apiService) : super(const ScannerState());
 
   void onCameraReady() {
     emit(state.copyWith(status: ScannerStatus.ready));
@@ -19,18 +21,33 @@ class ScannerCubit extends CubitBase<ScannerState> {
     emit(state.copyWith(status: ScannerStatus.initializing, error: message));
   }
 
-  Future<void> capturePhoto() async {
+  Future<void> capturePhoto(String imagePath) async {
     if (!state.isReady) return;
     _nudgeTimer?.cancel();
     _nudgeTimer = null;
     emit(state.copyWith(status: ScannerStatus.processing));
 
-    // Simulate AI processing delay
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (!isClosed) {
-      emit(state.copyWith(status: ScannerStatus.done));
+    try {
+      final result = await _apiService.analyzeCrop(imagePath);
+      if (!isClosed) {
+        emit(state.copyWith(status: ScannerStatus.done, result: result));
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(state.copyWith(
+          status: ScannerStatus.error,
+          error: 'Hindi ma-analyze ang larawan. Subukan muli.',
+        ));
+      }
     }
+  }
+
+  void retryCapture() {
+    emit(state.copyWith(
+      status: ScannerStatus.ready,
+      error: null,
+    ));
+    _startNudgeCycle();
   }
 
   void _startNudgeCycle() {
