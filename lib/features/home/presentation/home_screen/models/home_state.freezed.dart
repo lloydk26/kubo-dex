@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HomeState {
 
- List<SampleEntity> get items; bool get isLoading; bool get hasError; String get errorMessage;
+ List<ScanRecord> get recentScans; int get totalScans; String get averageGrade; bool get isLoading; bool get hasError; String get errorMessage;
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $HomeStateCopyWith<HomeState> get copyWith => _$HomeStateCopyWithImpl<HomeState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeState&&const DeepCollectionEquality().equals(other.recentScans, recentScans)&&(identical(other.totalScans, totalScans) || other.totalScans == totalScans)&&(identical(other.averageGrade, averageGrade) || other.averageGrade == averageGrade)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),isLoading,hasError,errorMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(recentScans),totalScans,averageGrade,isLoading,hasError,errorMessage);
 
 @override
 String toString() {
-  return 'HomeState(items: $items, isLoading: $isLoading, hasError: $hasError, errorMessage: $errorMessage)';
+  return 'HomeState(recentScans: $recentScans, totalScans: $totalScans, averageGrade: $averageGrade, isLoading: $isLoading, hasError: $hasError, errorMessage: $errorMessage)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $HomeStateCopyWith<$Res>  {
   factory $HomeStateCopyWith(HomeState value, $Res Function(HomeState) _then) = _$HomeStateCopyWithImpl;
 @useResult
 $Res call({
- List<SampleEntity> items, bool isLoading, bool hasError, String errorMessage
+ List<ScanRecord> recentScans, int totalScans, String averageGrade, bool isLoading, bool hasError, String errorMessage
 });
 
 
@@ -62,10 +62,12 @@ class _$HomeStateCopyWithImpl<$Res>
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? isLoading = null,Object? hasError = null,Object? errorMessage = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? recentScans = null,Object? totalScans = null,Object? averageGrade = null,Object? isLoading = null,Object? hasError = null,Object? errorMessage = null,}) {
   return _then(_self.copyWith(
-items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<SampleEntity>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+recentScans: null == recentScans ? _self.recentScans : recentScans // ignore: cast_nullable_to_non_nullable
+as List<ScanRecord>,totalScans: null == totalScans ? _self.totalScans : totalScans // ignore: cast_nullable_to_non_nullable
+as int,averageGrade: null == averageGrade ? _self.averageGrade : averageGrade // ignore: cast_nullable_to_non_nullable
+as String,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,hasError: null == hasError ? _self.hasError : hasError // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String,
@@ -153,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<SampleEntity> items,  bool isLoading,  bool hasError,  String errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ScanRecord> recentScans,  int totalScans,  String averageGrade,  bool isLoading,  bool hasError,  String errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HomeState() when $default != null:
-return $default(_that.items,_that.isLoading,_that.hasError,_that.errorMessage);case _:
+return $default(_that.recentScans,_that.totalScans,_that.averageGrade,_that.isLoading,_that.hasError,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -174,10 +176,10 @@ return $default(_that.items,_that.isLoading,_that.hasError,_that.errorMessage);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<SampleEntity> items,  bool isLoading,  bool hasError,  String errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ScanRecord> recentScans,  int totalScans,  String averageGrade,  bool isLoading,  bool hasError,  String errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _HomeState():
-return $default(_that.items,_that.isLoading,_that.hasError,_that.errorMessage);case _:
+return $default(_that.recentScans,_that.totalScans,_that.averageGrade,_that.isLoading,_that.hasError,_that.errorMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +196,10 @@ return $default(_that.items,_that.isLoading,_that.hasError,_that.errorMessage);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<SampleEntity> items,  bool isLoading,  bool hasError,  String errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ScanRecord> recentScans,  int totalScans,  String averageGrade,  bool isLoading,  bool hasError,  String errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _HomeState() when $default != null:
-return $default(_that.items,_that.isLoading,_that.hasError,_that.errorMessage);case _:
+return $default(_that.recentScans,_that.totalScans,_that.averageGrade,_that.isLoading,_that.hasError,_that.errorMessage);case _:
   return null;
 
 }
@@ -209,16 +211,18 @@ return $default(_that.items,_that.isLoading,_that.hasError,_that.errorMessage);c
 
 
 class _HomeState implements HomeState {
-  const _HomeState({final  List<SampleEntity> items = const <SampleEntity>[], this.isLoading = false, this.hasError = false, this.errorMessage = ''}): _items = items;
+  const _HomeState({final  List<ScanRecord> recentScans = const <ScanRecord>[], this.totalScans = 0, this.averageGrade = '--', this.isLoading = false, this.hasError = false, this.errorMessage = ''}): _recentScans = recentScans;
   
 
- final  List<SampleEntity> _items;
-@override@JsonKey() List<SampleEntity> get items {
-  if (_items is EqualUnmodifiableListView) return _items;
+ final  List<ScanRecord> _recentScans;
+@override@JsonKey() List<ScanRecord> get recentScans {
+  if (_recentScans is EqualUnmodifiableListView) return _recentScans;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_items);
+  return EqualUnmodifiableListView(_recentScans);
 }
 
+@override@JsonKey() final  int totalScans;
+@override@JsonKey() final  String averageGrade;
 @override@JsonKey() final  bool isLoading;
 @override@JsonKey() final  bool hasError;
 @override@JsonKey() final  String errorMessage;
@@ -233,16 +237,16 @@ _$HomeStateCopyWith<_HomeState> get copyWith => __$HomeStateCopyWithImpl<_HomeSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeState&&const DeepCollectionEquality().equals(other._recentScans, _recentScans)&&(identical(other.totalScans, totalScans) || other.totalScans == totalScans)&&(identical(other.averageGrade, averageGrade) || other.averageGrade == averageGrade)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.hasError, hasError) || other.hasError == hasError)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),isLoading,hasError,errorMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_recentScans),totalScans,averageGrade,isLoading,hasError,errorMessage);
 
 @override
 String toString() {
-  return 'HomeState(items: $items, isLoading: $isLoading, hasError: $hasError, errorMessage: $errorMessage)';
+  return 'HomeState(recentScans: $recentScans, totalScans: $totalScans, averageGrade: $averageGrade, isLoading: $isLoading, hasError: $hasError, errorMessage: $errorMessage)';
 }
 
 
@@ -253,7 +257,7 @@ abstract mixin class _$HomeStateCopyWith<$Res> implements $HomeStateCopyWith<$Re
   factory _$HomeStateCopyWith(_HomeState value, $Res Function(_HomeState) _then) = __$HomeStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<SampleEntity> items, bool isLoading, bool hasError, String errorMessage
+ List<ScanRecord> recentScans, int totalScans, String averageGrade, bool isLoading, bool hasError, String errorMessage
 });
 
 
@@ -270,10 +274,12 @@ class __$HomeStateCopyWithImpl<$Res>
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? isLoading = null,Object? hasError = null,Object? errorMessage = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? recentScans = null,Object? totalScans = null,Object? averageGrade = null,Object? isLoading = null,Object? hasError = null,Object? errorMessage = null,}) {
   return _then(_HomeState(
-items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
-as List<SampleEntity>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+recentScans: null == recentScans ? _self._recentScans : recentScans // ignore: cast_nullable_to_non_nullable
+as List<ScanRecord>,totalScans: null == totalScans ? _self.totalScans : totalScans // ignore: cast_nullable_to_non_nullable
+as int,averageGrade: null == averageGrade ? _self.averageGrade : averageGrade // ignore: cast_nullable_to_non_nullable
+as String,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,hasError: null == hasError ? _self.hasError : hasError // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: null == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String,
