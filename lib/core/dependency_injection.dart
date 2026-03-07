@@ -15,6 +15,10 @@ class ServiceLocator {
       'http://18.136.103.92:8000',
       instanceName: 'appServerUrl',
     );
+    instance.registerSingleton<String>(
+      'https://7ff4-2001-fd8-b619-4700-5d40-b3f6-bfc4-ae9c.ngrok-free.app',
+      instanceName: 'weatherApiUrl',
+    );
     configureDependencies();
   }
 }

@@ -8,6 +8,7 @@ import 'package:kubo_dex/features/home/presentation/home_screen/cubits/home_cubi
 import 'package:kubo_dex/features/home/presentation/home_screen/models/home_state.dart';
 import 'package:kubo_dex/features/pre_scan/presentation/pre_scan_screen/views/pre_scan_view.dart';
 import 'package:kubo_dex/shared/resources/theme.dart';
+import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/views/weather_forecast_card.dart';
 import 'package:kubo_dex/shared/widgets/app_drawer.dart';
 import 'package:kubo_dex/shared/widgets/app_header.dart';
 import 'package:kubo_dex/shared/widgets/loading_indicator.dart';
@@ -75,9 +76,11 @@ class _HomeBody extends StatelessWidget {
                 totalScans: state.totalScans,
                 averageGrade: state.averageGrade,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
               _RecentScansSection(scans: state.recentScans),
               const SizedBox(height: 24),
+              const WeatherForecastCard(),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -445,4 +448,3 @@ class _EmptyScans extends StatelessWidget {
     );
   }
 }
-

@@ -33,9 +33,9 @@ class AppDrawer extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
               child: Row(
                 children: [
-                  SvgPicture.asset(
-                    'assets/images/logo.svg',
-                    width: MediaQuery.sizeOf(context).width * 0.36,
+                  Image.asset(
+                    'assets/images/ic_logo.png',
+                    width: MediaQuery.sizeOf(context).width * 0.1,
                     fit: BoxFit.contain,
                   ),
                 ],

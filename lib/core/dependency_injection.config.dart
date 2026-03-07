@@ -35,6 +35,13 @@ import 'package:kubo_dex/features/scanner/domain/services/scanner_service.dart'
     as _i153;
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/cubits/scanner_cubit.dart'
     as _i401;
+import 'package:kubo_dex/features/weather/data/api/weather_api.dart' as _i411;
+import 'package:kubo_dex/features/weather/domain/mapper/weather_mapper.dart'
+    as _i452;
+import 'package:kubo_dex/features/weather/domain/services/weather_service.dart'
+    as _i1047;
+import 'package:kubo_dex/features/weather/presentation/weather_forecast_card/cubits/weather_forecast_card_cubit.dart'
+    as _i374;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -45,8 +52,9 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     gh.factory<_i1060.SampleMapper>(() => const _i1060.SampleMapper());
     gh.factory<_i203.PreScanCubit>(() => _i203.PreScanCubit());
-    gh.factory<_i144.DiagnosisCubit>(() => _i144.DiagnosisCubit());
+    gh.factory<_i452.WeatherMapper>(() => const _i452.WeatherMapper());
     gh.factory<_i281.DiagnosisMapper>(() => const _i281.DiagnosisMapper());
+    gh.factory<_i144.DiagnosisCubit>(() => _i144.DiagnosisCubit());
     gh.lazySingleton<_i782.NavigationService>(() => _i782.NavigationService());
     gh.lazySingleton<_i917.DioProvider>(() => _i917.DioProvider());
     gh.lazySingleton<_i74.Logger>(() => _i74.AppLogger());
@@ -73,6 +81,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i74.Logger>(),
       ),
     );
+    gh.lazySingleton<_i411.WeatherApi>(
+      () => _i411.WeatherApi(
+        gh<_i917.DioProvider>(),
+        gh<String>(instanceName: 'weatherApiUrl'),
+      ),
+    );
     gh.lazySingleton<_i153.ScannerService>(
       () => _i153.ScannerServiceImpl(
         gh<_i849.ScannerApi>(),
@@ -80,8 +94,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i74.Logger>(),
       ),
     );
+    gh.lazySingleton<_i1047.WeatherService>(
+      () => _i1047.WeatherServiceImpl(
+        gh<_i411.WeatherApi>(),
+        gh<_i452.WeatherMapper>(),
+        gh<_i74.Logger>(),
+      ),
+    );
     gh.factory<_i401.ScannerCubit>(
       () => _i401.ScannerCubit(gh<_i153.ScannerService>()),
+    );
+    gh.factory<_i374.WeatherForecastCardCubit>(
+      () => _i374.WeatherForecastCardCubit(gh<_i1047.WeatherService>()),
     );
     return this;
   }

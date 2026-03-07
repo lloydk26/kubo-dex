@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 const appServerUrl = Named('appServerUrl');
+const weatherApiUrl = Named('weatherApiUrl');
 
 @lazySingleton
 class DioProvider {
