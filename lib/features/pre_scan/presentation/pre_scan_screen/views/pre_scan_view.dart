@@ -294,24 +294,29 @@ class _CropGrid extends StatelessWidget {
 
   static const _crops = [
     (
-      type: CropType.pechay,
-      label: 'Pechay',
-      emoji: '🥬',
-      color: Color(0xFFCFF0CC),
-    ),
-    (
       type: CropType.tomato,
       label: 'Tomato',
       emoji: '🍅',
       color: Color(0xFFFFDDD8),
     ),
     (
-      type: CropType.eggplant,
-      label: 'Eggplant',
-      emoji: '🍆',
-      color: Color(0xFFE8DDFF),
+      type: CropType.banana,
+      label: 'Banana',
+      emoji: '🍌',
+      color: Color(0xFFFFFDE7),
     ),
-    (type: CropType.rice, label: 'Rice', emoji: '🌾', color: Color(0xFFFFF3CC)),
+    (
+      type: CropType.coffee,
+      label: 'Coffee',
+      emoji: '☕',
+      color: Color(0xFFEFEBE9),
+    ),
+    (
+      type: CropType.cucumber,
+      label: 'Cucumber',
+      emoji: '🥒',
+      color: Color(0xFFE8F5E9),
+    ),
   ];
 
   @override

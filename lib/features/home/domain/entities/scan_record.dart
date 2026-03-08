@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 enum CropGrade { a, b, c }
 
-enum CropType { pechay, tomato, eggplant, rice, mais, other }
+enum CropType { pechay, tomato, eggplant, rice, mais, banana, coffee, cucumber, other }
 
 class ScanRecord extends Equatable {
   final String id;

@@ -871,6 +871,9 @@ class _ScanCard extends StatelessWidget {
       CropType.eggplant => AppColors.cropEggplant,
       CropType.rice => AppColors.cropRice,
       CropType.mais => AppColors.cropMais,
+      CropType.banana => AppColors.cropBanana,
+      CropType.coffee => AppColors.cropCoffee,
+      CropType.cucumber => AppColors.cropCucumber,
       CropType.other => AppColors.cropOther,
     };
   }
@@ -882,6 +885,9 @@ class _ScanCard extends StatelessWidget {
       CropType.eggplant => '🍆',
       CropType.rice => '🌾',
       CropType.mais => '🌽',
+      CropType.banana => '🍌',
+      CropType.coffee => '☕',
+      CropType.cucumber => '🥒',
       CropType.other => '🌿',
     };
   }

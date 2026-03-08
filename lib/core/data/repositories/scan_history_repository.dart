@@ -16,12 +16,15 @@ class ScanHistoryRepositoryImpl implements ScanHistoryRepository {
   ScanHistoryRepositoryImpl(@Named('scanHistoryBox') this._box);
 
   static const _cropKeywords = <String, CropType>{
-    'pechay': CropType.pechay,
-    'tomato': CropType.tomato,
-    'eggplant': CropType.eggplant,
-    'rice': CropType.rice,
-    'mais': CropType.mais,
-    'corn': CropType.mais,
+          'pechay': CropType.pechay,
+            'tomato': CropType.tomato,
+            'eggplant': CropType.eggplant,
+            'rice': CropType.rice,
+            'mais': CropType.mais,
+            'corn': CropType.mais,
+            'banana': CropType.banana,
+            'coffee': CropType.coffee,
+            'cucumber': CropType.cucumber,
   };
 
   CropType _resolveCropType(String name) {

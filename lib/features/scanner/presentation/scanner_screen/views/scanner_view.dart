@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:kubo_dex/core/dependency_injection.dart';
 import 'package:kubo_dex/features/diagnosis/presentation/diagnosis_screen/views/diagnosis_view.dart';
 import 'package:kubo_dex/features/scanner/presentation/scanner_screen/cubits/scanner_cubit.dart';
@@ -83,18 +84,27 @@ class _ScannerViewState extends State<ScannerView> {
             ),
           );
         } else if (state.hasError && state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error!),
-              backgroundColor: Colors.red.shade700,
-              action: SnackBarAction(
-                label: 'Ulit',
-                textColor: Colors.white,
-                onPressed: () =>
-                    context.read<ScannerCubit>().retryCapture(),
-              ),
-            ),
-          );
+          final cubit = context.read<ScannerCubit>();
+          ScaffoldMessenger.of(context)
+              .showSnackBar(
+                SnackBar(
+                  content: Text(state.error!),
+                  backgroundColor: Colors.red.shade700,
+                  action: SnackBarAction(
+                    label: 'Ulit',
+                    textColor: Colors.white,
+                    onPressed: cubit.retryCapture,
+                  ),
+                ),
+              )
+              .closed
+              .then((reason) {
+            // The action button already called retryCapture directly;
+            // for every other dismissal (timeout, swipe, hide) trigger it here.
+            if (reason != SnackBarClosedReason.action) {
+              cubit.retryCapture();
+            }
+          });
         }
       },
       child: Scaffold(

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:injectable/injectable.dart';
 import 'package:kubo_dex/core/presentation/cubit/cubit_base.dart';
 import 'package:kubo_dex/features/scanner/domain/services/scanner_service.dart';
@@ -28,7 +30,9 @@ class ScannerCubit extends CubitBase<ScannerState> {
     emit(state.copyWith(status: ScannerStatus.processing));
 
     try {
-      final result = await _scannerService.analyzeCrop(imagePath, plant: plant);
+      final compressedPath = await _compressImage(imagePath);
+      final result =
+          await _scannerService.analyzeCrop(compressedPath, plant: plant);
       if (!isClosed) {
         emit(state.copyWith(status: ScannerStatus.done, result: result));
       }
@@ -40,6 +44,25 @@ class ScannerCubit extends CubitBase<ScannerState> {
         ));
       }
     }
+  }
+
+  /// Compresses [imagePath] to JPEG at 80 % quality, max 1024 px on the long
+  /// edge. Falls back to the original path if compression fails.
+  Future<String> _compressImage(String imagePath) async {
+    final original = File(imagePath);
+    final targetPath =
+        '${original.parent.path}/compressed_${original.uri.pathSegments.last}';
+
+    final result = await FlutterImageCompress.compressAndGetFile(
+      imagePath,
+      targetPath,
+      quality: 80,
+      minWidth: 1024,
+      minHeight: 1024,
+      format: CompressFormat.jpeg,
+    );
+
+    return result?.path ?? imagePath;
   }
 
   void retryCapture() {

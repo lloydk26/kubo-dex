@@ -24,6 +24,9 @@ class AppColors {
   static const Color cropEggplant = Color(0xFF7E57C2);
   static const Color cropRice = Color(0xFFFFD54F);
   static const Color cropMais = Color(0xFFFFA726);
+  static const Color cropBanana = Color(0xFFFFCA28);
+  static const Color cropCoffee = Color(0xFF8D6E63);
+  static const Color cropCucumber = Color(0xFF66BB6A);
   static const Color cropOther = Color(0xFF90A4AE);
 
   static const Color error = Color(0xFFB00020);
