@@ -17,13 +17,16 @@ class ServiceLocator {
     required Box scanHistoryBox,
   }) {
     instance.registerSingleton<SharedPreferences>(prefs);
-    instance.registerSingleton<Box>(scanHistoryBox, instanceName: 'scanHistoryBox');
+    instance.registerSingleton<Box>(
+      scanHistoryBox,
+      instanceName: 'scanHistoryBox',
+    );
     instance.registerSingleton<String>(
-      'http://18.136.103.92:8000',
+      'https://highhanded-washier-rima.ngrok-free.dev',
       instanceName: 'appServerUrl',
     );
     instance.registerSingleton<String>(
-      'https://7ff4-2001-fd8-b619-4700-5d40-b3f6-bfc4-ae9c.ngrok-free.app',
+      'https://highhanded-washier-rima.ngrok-free.dev',
       instanceName: 'weatherApiUrl',
     );
     configureDependencies();
